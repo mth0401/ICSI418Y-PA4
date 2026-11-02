@@ -5,9 +5,11 @@ const db = client.db("ICS418Y-PA2");
 const accounts = db.collection("accounts");
 const projects = db.collection("projects");
 const projectMemberships = db.collection("projectMemberships");
+const userStories = db.collections("userStories");
 
 const express = require("express");
 const cors = require("cors");
+const { useActionState } = require("react");
 
 const app = express();
 
@@ -352,3 +354,64 @@ app.delete("/projects/:projectId/members/:accountId", async (req, res) => {
         });
     }
 });
+
+////////////////// User Stories /////////////////////////////
+const priorities = ["High", "Medium", "Low"];
+const storyStatuses = ["To Do", "In Progress", "Done"];
+
+app.post("/projects/:projectId/stories", async (req, res) => {
+    const title = req.body.title;
+    const description = req.body.description;
+    const priority = req.body.priority;
+    const status = req.body.status;
+    const assignedAccountId = req.body.assignedAccountId;
+    const rawId = req.params.projectId;
+
+    if (typeof rawId !== "string" || !ObjectId.isValid(rawId)) {
+        return res.status(400).json({ message: "Invalid project identifier." });
+    }
+
+    const projectId = new ObjectId(rawId)
+
+    const projectExist = await projects.findOne({_id: projectId});
+
+    if(!projectExist) {
+        return res.status(404).json({message: "Selected Project does not exist"})
+    }
+
+    if(title === "" || description === "" || priority === "" || status === "") {
+        return res.status(400).json({
+            message: "one or more fields is empty"
+        })
+    }
+
+    const account = await accounts.findOne({
+        _id: assignedAccountId
+    });
+
+    if(!account) {
+        return res.status(404).json({message: "account does not exist"});
+    }
+    const membership = await membershipsCollection.findOne({
+        projId: projectId,
+        projMemberId: assignedAccountId
+    });
+
+    if(!membership) {
+        return res.status(400).json({message: "assignee is not a member of this project"});
+    }
+
+    const userStory = {
+        projectId: projectId,
+        title: title,
+        description: description,
+        priority: priority,
+        status: "To Do",
+        assignedAccountId: assignedAccountId
+    }
+    await userStories.insertOne(userStory);
+
+    res.status(201).json({
+        message: "user story created"
+    });
+})
