@@ -5,11 +5,10 @@ const db = client.db("ICS418Y-PA2");
 const accounts = db.collection("accounts");
 const projects = db.collection("projects");
 const projectMemberships = db.collection("projectMemberships");
-const userStories = db.collections("userStories");
+const userStories = db.collection("userStories");
 
 const express = require("express");
 const cors = require("cors");
-const { useActionState } = require("react");
 
 const app = express();
 
@@ -363,7 +362,6 @@ app.post("/projects/:projectId/stories", async (req, res) => {
     const title = req.body.title;
     const description = req.body.description;
     const priority = req.body.priority;
-    const status = req.body.status;
     const assignedAccountId = req.body.assignedAccountId;
     const rawId = req.params.projectId;
 
@@ -379,35 +377,44 @@ app.post("/projects/:projectId/stories", async (req, res) => {
         return res.status(404).json({message: "Selected Project does not exist"})
     }
 
-    if(title === "" || description === "" || priority === "" || status === "") {
+    if(title === "" || description === "" || priority === "") {
         return res.status(400).json({
             message: "one or more fields is empty"
         })
     }
 
-    const account = await accounts.findOne({
-        _id: assignedAccountId
-    });
-
-    if(!account) {
-        return res.status(404).json({message: "account does not exist"});
-    }
-    const membership = await membershipsCollection.findOne({
-        projId: projectId,
-        projMemberId: assignedAccountId
-    });
-
-    if(!membership) {
-        return res.status(400).json({message: "assignee is not a member of this project"});
+    if (!priorities.includes(priority)) {
+        return res.status(400).json({ message: "Invalid priority." });
     }
 
+    if(assignedAccountId !== null) {
+        if(!ObjectId.isValid(assignedAccountId)) {
+            return res.status(400).json({message: "Invalid account ID"})
+        }
+
+        const account = await accounts.findOne({
+            _id: new ObjectId(assignedAccountId)
+        });
+
+        if(!account) {
+            return res.status(404).json({message: "account does not exist"});
+        }
+        const membership = await projectMemberships.findOne({
+            projId: projectId,
+            projMemberId: new ObjectId(assignedAccountId)
+        });
+
+        if(!membership) {
+            return res.status(400).json({message: "assignee is not a member of this project"});
+        }
+    }
     const userStory = {
         projectId: projectId,
         title: title,
         description: description,
         priority: priority,
         status: "To Do",
-        assignedAccountId: assignedAccountId
+        assignedAccountId: assignedAccountId === null ? null : new ObjectId(assignedAccountId)
     }
     await userStories.insertOne(userStory);
 

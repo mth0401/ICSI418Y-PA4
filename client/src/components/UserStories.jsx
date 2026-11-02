@@ -7,7 +7,7 @@ function CreateUserStory() {
     const [selectedProject, setSelectedProject] = useState("");
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [priority, setPriority] = useState("");
+    const [priority, setPriority] = useState("High");
     const [selectedMemberId, setSelectedMemberId] = useState("");
     const [message, setMessage] = useState("");
 
@@ -77,7 +77,7 @@ function CreateUserStory() {
             if (credentials.ok) {
                 setTitle("");
                 setDescription("");
-                setPriority("");
+                setPriority("High");
                 setSelectedMemberId("");
             }
 
