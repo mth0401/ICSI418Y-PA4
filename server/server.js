@@ -359,66 +359,98 @@ const priorities = ["High", "Medium", "Low"];
 const storyStatuses = ["To Do", "In Progress", "Done"];
 
 app.post("/projects/:projectId/stories", async (req, res) => {
-    const title = req.body.title;
-    const description = req.body.description;
-    const priority = req.body.priority;
-    const assignedAccountId = req.body.assignedAccountId;
-    const rawId = req.params.projectId;
+    try {
+        const title = req.body.title;
+        const description = req.body.description;
+        const priority = req.body.priority;
+        const assignedAccountId = req.body.assignedAccountId;
+        const rawId = req.params.projectId;
 
-    if (typeof rawId !== "string" || !ObjectId.isValid(rawId)) {
-        return res.status(400).json({ message: "Invalid project identifier." });
-    }
+        if (typeof rawId !== "string" || !ObjectId.isValid(rawId)) {
+            return res.status(400).json({ message: "Invalid project identifier." });
+        }
 
-    const projectId = new ObjectId(rawId)
+        const projectId = new ObjectId(rawId)
 
-    const projectExist = await projects.findOne({_id: projectId});
+        const projectExist = await projects.findOne({_id: projectId});
 
-    if(!projectExist) {
-        return res.status(404).json({message: "Selected Project does not exist"})
-    }
+        if(!projectExist) {
+            return res.status(404).json({message: "Selected Project does not exist"})
+        }
 
-    if(title === "" || description === "" || priority === "") {
-        return res.status(400).json({
-            message: "one or more fields is empty"
+        if(title === "" || description === "" || priority === "") {
+            return res.status(400).json({
+                message: "one or more fields is empty"
+            })
+        }
+
+        if (!priorities.includes(priority)) {
+            return res.status(400).json({ 
+                message: "Invalid priority." 
+            });
+        }
+
+        if(assignedAccountId !== null) {
+            if(!ObjectId.isValid(assignedAccountId)) {
+                return res.status(400).json({
+                    message: "Invalid account ID"
+                })
+            }
+
+            const account = await accounts.findOne({
+                _id: new ObjectId(assignedAccountId)
+            });
+
+            if(!account) {
+                return res.status(404).json({message: "account does not exist"});
+            }
+            const membership = await projectMemberships.findOne({
+                projId: projectId,
+                projMemberId: new ObjectId(assignedAccountId)
+            });
+
+            if(!membership) {
+                return res.status(400).json({message: "assignee is not a member of this project"});
+            }
+        }
+        const userStory = {
+            projectId: projectId,
+            title: title,
+            description: description,
+            priority: priority,
+            status: "To Do",
+            assignedAccountId: assignedAccountId === null ? null : new ObjectId(assignedAccountId)
+        }
+        await userStories.insertOne(userStory);
+
+        res.status(201).json({
+            message: "user story created"
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "server error"
         })
     }
+})
 
-    if (!priorities.includes(priority)) {
-        return res.status(400).json({ message: "Invalid priority." });
-    }
+app.get("/projects/:projectId/stories", async (req, res) => {
+    try {
+         const rawId = req.params.projectId;
 
-    if(assignedAccountId !== null) {
-        if(!ObjectId.isValid(assignedAccountId)) {
-            return res.status(400).json({message: "Invalid account ID"})
+        if (!ObjectId.isValid(rawId)) {
+            return res.status(400).json({
+                message: "Invalid project ID"
+            });
         }
 
-        const account = await accounts.findOne({
-            _id: new ObjectId(assignedAccountId)
-        });
-
-        if(!account) {
-            return res.status(404).json({message: "account does not exist"});
-        }
-        const membership = await projectMemberships.findOne({
-            projId: projectId,
-            projMemberId: new ObjectId(assignedAccountId)
-        });
-
-        if(!membership) {
-            return res.status(400).json({message: "assignee is not a member of this project"});
-        }
+        const projectId = new ObjectId(rawId);
+        const stories = await userStories.find({ 
+            projectId: projectId 
+        }).toArray();
+        res.json(stories);
+    } catch (error) {
+        res.status(500).json({
+            message: "server error"
+        })
     }
-    const userStory = {
-        projectId: projectId,
-        title: title,
-        description: description,
-        priority: priority,
-        status: "To Do",
-        assignedAccountId: assignedAccountId === null ? null : new ObjectId(assignedAccountId)
-    }
-    await userStories.insertOne(userStory);
-
-    res.status(201).json({
-        message: "user story created"
-    });
 })

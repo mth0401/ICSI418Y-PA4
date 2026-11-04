@@ -43,7 +43,7 @@ function CreateUserStory() {
                     setProjectMemberships(data);
                 }
             } catch(error) {
-                setMessage("could not reach server 2");
+                setMessage("could not reach server");
             }
         }
         fetchMemberships();
@@ -74,15 +74,16 @@ function CreateUserStory() {
 
             const data = await credentials.json();
 
-            if (credentials.ok) {
+            if(credentials.ok) {
                 setTitle("");
                 setDescription("");
                 setPriority("High");
                 setSelectedMemberId("");
+                setMessage("");
             }
-
-            setMessage(data.message);
-
+            else {
+                setMessage(data.message);
+            }
         } catch (error) {
             setMessage("could not reach server");
         }

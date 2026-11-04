@@ -5,6 +5,7 @@ import ProjectCreation from './components/ProjectCreation';
 import ViewAllProjects from './components/ViewAllProjects';
 import ProjectMemberships from './components/ManageProjectMemberships';
 import CreateUserStory from './components/UserStories';
+import ProjectBacklog from './components/ProjectBacklog';
 import './App.css';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
             <button onClick={() => setPage("projects")}>View Projects</button>
             <button onClick={() => setPage("projectMemberships")}>Project Memberships</button>
             <button onClick={() => setPage("createUserStory")}>Create User Story</button>
+            <button onClick={() => setPage("projectBacklog")}>Project Backlog</button>
 
             {page === "signup" && <Signup />}
             {page === "login" && <Login />}
@@ -25,6 +27,7 @@ function App() {
             {page === "projects" && <ViewAllProjects />}
             {page === "projectMemberships" && <ProjectMemberships />}
             {page === "createUserStory" && <CreateUserStory />}
+            {page === "projectBacklog" && <ProjectBacklog />}
       </div>
   );
 }

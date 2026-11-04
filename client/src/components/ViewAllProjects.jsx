@@ -50,7 +50,7 @@ function ViewAllProjects() {
             <h2>Projects</h2>
             <p>{message}</p>
 
-            {projects.map(project => {
+            {projects.map((project) => {
                 const lead = accounts.find(
                     account => account._id === project.projLead
                 );
