@@ -65,7 +65,7 @@ function CreateUserStory() {
                         projectId: selectedProject,
                         title: title.trim(),
                         description: description.trim(),
-                        priority: priority.trim(),
+                        priority: priority,
                         assignedAccountId: assignedAccountId
 
                     })
@@ -79,7 +79,7 @@ function CreateUserStory() {
                 setDescription("");
                 setPriority("High");
                 setSelectedMemberId("");
-                setMessage("");
+                setMessage(data.message)
             }
             else {
                 setMessage(data.message);
